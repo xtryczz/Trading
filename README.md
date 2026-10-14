@@ -1,7 +1,7 @@
 # Solana copy-trading bot
 
 Bot sleduje peněženky vybraných traderů na Solaně (přímo z blockchainu, bez Fomo API) a kopíruje jejich nákupy a prodeje.
-**Stav: fáze 1–3 hotové (sledování + paper trading). Fáze 4 (live) zatím není implementovaná.**
+**Stav: všechny 4 fáze hotové. Live mód je zatím netestovaný na reálné síti – začni testovacím obchodem.**
 
 ## 1. Příprava (jednou)
 
@@ -57,9 +57,21 @@ Testy (bez internetu): `npm test`.
 - Sledování: `connection.onLogs` přes WebSocket (`confirmed`), deduplikace podle signature, kontrola zdraví RPC každých 30 s (`@solana/web3.js` se po výpadku WebSocketu připojí a obnoví odběry sám).
 - Rozpoznání swapu: porovnání zůstatků peněženky před/po transakci (SOL + WSOL + tokeny), žádné dekódování DEXů. Ignoruje se změna SOL pod 0.001, neúspěšné transakce a token-za-token swapy.
 
-## Poznámky pro fázi 4 (Opus)
+## 4. Live (jen po týdnu úspěšného paper tradingu!)
 
-- `src/executor.ts`: `LiveExecutor` je zatím jen stub. Má implementovat rozhraní `Executor` (`preview`, `buy`, `sell`, `value`). Zbytek (filtry, pozice, TP/SL, log) už je hotový a na módu nezávisí.
-- `src/index.ts` už v live módu vypisuje varování a čeká 10 s.
-- Jupiter endpointy v `src/jupiter.ts` (`/swap/v1/quote`) jsem **nemohl ověřit proti živému API** (sandbox blokuje jup.ag). Před použitím ověřit proti aktuální dokumentaci, včetně `POST /swap/v1/swap`.
-- Nic z paper módu nebylo testováno proti reálné síti (jen jednotkové testy se syntetickými transakcemi). První skutečný běh ukáže případné drobnosti.
+1. **Vytvoř novou peněženku jen pro bota** (např. Phantom → nový účet) a pošli tam malou částku (např. 0.3 SOL). Nikdy nepoužívej svou hlavní peněženku.
+2. Exportuj její privátní klíč a vlož ho do `.env` jako `PRIVATE_KEY=` (base58 řetězec z Phantomu). Nikomu ho neposílej.
+3. Nastav `MODE=live` a **jeden testovací obchod**:
+   ```
+   npm run test-trade -- <adresa tokenu>   # koupí za 0.005 SOL a hned prodá
+   ```
+   Po 10 s odpočtu pošle skutečné transakce. Zkontroluj výsledek na Solscan. Doporučený token pro test: nějaký likvidní, ne čerstvý memecoin.
+4. Když test dopadne dobře, spusť `npm start`. Bot vypíše velké varování a 10 s čeká (Ctrl+C zruší).
+
+V live módu bot před nákupem zkontroluje zůstatek SOL, při prodeji prodává jen to, co v peněžence opravdu je, a skutečné částky bere z potvrzené transakce. Privátní klíč se nikdy nevypisuje.
+
+## Poznámky
+
+- Jupiter endpointy (`/swap/v1/quote`, `/swap/v1/swap` na `lite-api.jup.ag`) jsem **nemohl ověřit proti živému API** (sandbox blokuje jup.ag). Kód odpovídá dokumentaci podle mé znalosti; při chybě zkontroluj https://dev.jup.ag/docs.
+- Nic nebylo testováno proti reálné síti, jen jednotkové testy se syntetickými transakcemi.
+- Rizika: memecoiny mohou jít na nulu nebo jít nejde prodat (honeypot). Používej jen částky, o které se nebojíš přijít.
