@@ -1,0 +1,24 @@
+{
+  "name": "copybot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Solana copy-trading bot (paper trading)",
+  "scripts": {
+    "watch": "tsx src/index.ts watch",
+    "start": "tsx src/index.ts run",
+    "report": "tsx src/report.ts",
+    "test": "tsx src/test/swapDetect.test.ts && tsx src/test/engine.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.99.0",
+    "bs58": "^6.0.0",
+    "dotenv": "^18.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}
